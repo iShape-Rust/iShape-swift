@@ -2,6 +2,16 @@
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
+Current package version: `0.1.0`
+
+### Installation
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.1.0")
+]
+```
+
 Rebuild the FFI artifacts whenever you change the Rust sources:
 
 ```bash

@@ -5,6 +5,10 @@ import PackageDescription
 
 let package = Package(
     name: "iShape-swift",
+    platforms: [
+        .iOS(.v16),
+        .macOS(.v11),
+    ],
     products: [
         .library(
             name: "iShape-swift",
