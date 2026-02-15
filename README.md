@@ -42,3 +42,22 @@ print(shapes[0].count)   // -> outer contour + one hole
 ```
 
 `FlatShapesBuffer` can be reused across calls and passed over the FFI boundary, while the high-level helpers return Swift-native `[[[IntPoint]]]` structures for convenience.
+
+### Float / CGPoint API
+
+`FloatOverlay` mirrors the integer API, but takes and returns `CGPoint`:
+
+```swift
+import CoreGraphics
+import iShape_swift
+
+let overlay = FloatOverlay()
+overlay.addSubject([[
+    [CGPoint(x: 0, y: 0), CGPoint(x: 0, y: 4), CGPoint(x: 4, y: 4), CGPoint(x: 4, y: 0)],
+]])
+overlay.addClip([[
+    [CGPoint(x: 2, y: 0), CGPoint(x: 2, y: 4), CGPoint(x: 6, y: 4), CGPoint(x: 6, y: 0)],
+]])
+
+let result: CGPointShapes? = overlay.overlay(overlayRule: .union, fillRule: .evenOdd)
+```
