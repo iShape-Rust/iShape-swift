@@ -1,6 +1,6 @@
 import CoreGraphics
 import Testing
-@testable import iShape_swift
+@testable import iShapeKit
 
 @Test func test_0() {
     let overlay = IntOverlay()

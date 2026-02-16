@@ -1,4 +1,4 @@
-# iShape-swift
+# iShapeKit
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
@@ -9,6 +9,14 @@ Current package version: `0.1.0`
 ```swift
 dependencies: [
     .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.1.0")
+],
+targets: [
+    .target(
+        name: "YourTarget",
+        dependencies: [
+            .product(name: "iShapeKit", package: "iShape-swift")
+        ]
+    )
 ]
 ```
 
@@ -29,7 +37,7 @@ CLANG_MODULE_CACHE_PATH=$(pwd)/.cache/clang swift test --disable-sandbox
 ### Quick Start
 
 ```swift
-import iShape_swift
+import iShapeKit
 
 let overlay = IntOverlay()
 
@@ -59,7 +67,7 @@ print(shapes[0].count)   // -> outer contour + one hole
 
 ```swift
 import CoreGraphics
-import iShape_swift
+import iShapeKit
 
 let overlay = FloatOverlay()
 overlay.addSubject([[

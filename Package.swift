@@ -4,15 +4,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "iShape-swift",
+    name: "iShapeKit",
     platforms: [
         .iOS(.v16),
         .macOS(.v11),
     ],
     products: [
         .library(
-            name: "iShape-swift",
-            targets: ["iShape-swift"]
+            name: "iShapeKit",
+            targets: ["iShapeKit"]
         ),
     ],
     targets: [
@@ -32,12 +32,13 @@ let package = Package(
             ]
         ),
         .target(
-            name: "iShape-swift",
-            dependencies: ["iShapeFFI"]
+            name: "iShapeKit",
+            dependencies: ["iShapeFFI"],
+            path: "Sources/iShape-swift"
         ),
         .testTarget(
             name: "iShape-swiftTests",
-            dependencies: ["iShape-swift"]
+            dependencies: ["iShapeKit"]
         ),
     ]
 )
