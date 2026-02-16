@@ -2,6 +2,12 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import Foundation
+
+let packageRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
+let macLibPath = "\(packageRoot)/Sources/iShapeFFI/lib/macos"
+let iosDeviceLibPath = "\(packageRoot)/Sources/iShapeFFI/lib/ios/device"
+let iosSimLibPath = "\(packageRoot)/Sources/iShapeFFI/lib/ios/simulator"
 
 let package = Package(
     name: "iShapeKit",
@@ -22,11 +28,11 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("i_shape_ffi"),
                 .unsafeFlags(
-                    ["-L", "Sources/iShapeFFI/lib/macos"],
+                    ["-L", macLibPath],
                     .when(platforms: [.macOS])
                 ),
                 .unsafeFlags(
-                    ["-L", "Sources/iShapeFFI/lib/ios/device", "-L", "Sources/iShapeFFI/lib/ios/simulator"],
+                    ["-L", iosDeviceLibPath, "-L", iosSimLibPath],
                     .when(platforms: [.iOS])
                 )
             ]
