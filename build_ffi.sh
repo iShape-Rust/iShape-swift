@@ -7,6 +7,8 @@ SWIFT_LIB_DIR="${ROOT_DIR}/iShape-swift/Sources/iShapeFFI/lib"
 MAC_DIR="${SWIFT_LIB_DIR}/macos"
 IOS_DEVICE_DIR="${SWIFT_LIB_DIR}/ios/device"
 IOS_SIM_DIR="${SWIFT_LIB_DIR}/ios/simulator"
+XCFRAMEWORK_OUTPUT="${SWIFT_LIB_DIR}/i_shape_ffi.xcframework"
+PUBLIC_HEADERS_DIR="${ROOT_DIR}/iShape-swift/Sources/iShapeFFI/include"
 
 mkdir -p "${MAC_DIR}" "${IOS_DEVICE_DIR}" "${IOS_SIM_DIR}"
 
@@ -90,6 +92,32 @@ elif [[ -f "${LIB_X86_IOS_SIM}" ]]; then
     cp "${LIB_X86_IOS_SIM}" "${IOS_SIM_OUTPUT}"
 else
     echo "Warning: no iOS simulator library found." >&2
+fi
+
+if command -v xcodebuild >/dev/null 2>&1 \
+    && [[ -f "${MAC_OUTPUT_LIB}" ]] \
+    && [[ -f "${IOS_DEVICE_OUTPUT}" ]] \
+    && [[ -f "${IOS_SIM_OUTPUT}" ]]; then
+    HEADER_STAGING_DIR="$(mktemp -d)"
+    trap 'rm -rf "${HEADER_STAGING_DIR}"' EXIT
+
+    cp "${PUBLIC_HEADERS_DIR}/iShapeFFI.h" "${HEADER_STAGING_DIR}/iShapeFFI.h"
+    cat > "${HEADER_STAGING_DIR}/module.modulemap" <<'EOF'
+module iShapeFFIRustLib {
+    header "iShapeFFI.h"
+    export *
+}
+EOF
+
+    rm -rf "${XCFRAMEWORK_OUTPUT}"
+    echo "Creating XCFramework at ${XCFRAMEWORK_OUTPUT}..."
+    xcodebuild -create-xcframework \
+        -library "${MAC_OUTPUT_LIB}" -headers "${HEADER_STAGING_DIR}" \
+        -library "${IOS_DEVICE_OUTPUT}" -headers "${HEADER_STAGING_DIR}" \
+        -library "${IOS_SIM_OUTPUT}" -headers "${HEADER_STAGING_DIR}" \
+        -output "${XCFRAMEWORK_OUTPUT}"
+else
+    echo "Warning: skipped XCFramework creation (missing xcodebuild or one of the platform libraries)." >&2
 fi
 
 echo "Done."
