@@ -102,12 +102,6 @@ if command -v xcodebuild >/dev/null 2>&1 \
     trap 'rm -rf "${HEADER_STAGING_DIR}"' EXIT
 
     cp "${PUBLIC_HEADERS_DIR}/iShapeFFI.h" "${HEADER_STAGING_DIR}/iShapeFFI.h"
-    cat > "${HEADER_STAGING_DIR}/module.modulemap" <<'EOF'
-module iShapeFFIRustLib {
-    header "iShapeFFI.h"
-    export *
-}
-EOF
 
     rm -rf "${XCFRAMEWORK_OUTPUT}"
     echo "Creating XCFramework at ${XCFRAMEWORK_OUTPUT}..."

@@ -1,4 +1,0 @@
-module iShapeFFIRustLib {
-    header "iShapeFFI.h"
-    export *
-}
