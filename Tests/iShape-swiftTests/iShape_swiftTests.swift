@@ -305,6 +305,78 @@ import Testing
     assert(shapes == nil)
 }
 
+@Test func testCGPointOutlineOffsetSquareRoundJoinPositiveDistance() {
+    let square: [CGPoint] = [
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10),
+        CGPoint(x: 0, y: 10),
+    ]
+
+    let roundShapes = CGPointOutlineOffset.offsetContours(
+        points: square,
+        distance: 1,
+        style: OutlineOffsetStyle(lineJoin: .round(0.2))
+    )
+    let bevelShapes = CGPointOutlineOffset.offsetContours(
+        points: square,
+        distance: 1,
+        style: OutlineOffsetStyle(lineJoin: .bevel)
+    )
+
+    assert(roundShapes != nil)
+    assert(bevelShapes != nil)
+    assert(!roundShapes!.isEmpty)
+    assert(!bevelShapes!.isEmpty)
+
+    let roundBounds = bounds(of: roundShapes!)
+    assert(roundBounds != nil)
+    assert(approx(roundBounds!.minX, -1))
+    assert(approx(roundBounds!.minY, -1))
+    assert(approx(roundBounds!.maxX, 11))
+    assert(approx(roundBounds!.maxY, 11))
+
+    let roundPoints = totalPointCount(in: roundShapes!)
+    let bevelPoints = totalPointCount(in: bevelShapes!)
+    assert(roundPoints > bevelPoints)
+}
+
+private func bounds(of shapes: CGPointShapes) -> CGRect? {
+    var minX = CGFloat.infinity
+    var minY = CGFloat.infinity
+    var maxX = -CGFloat.infinity
+    var maxY = -CGFloat.infinity
+    var hasPoints = false
+
+    for shape in shapes {
+        for contour in shape {
+            for point in contour {
+                hasPoints = true
+                minX = min(minX, point.x)
+                minY = min(minY, point.y)
+                maxX = max(maxX, point.x)
+                maxY = max(maxY, point.y)
+            }
+        }
+    }
+
+    guard hasPoints else {
+        return nil
+    }
+
+    return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+}
+
+private func totalPointCount(in shapes: CGPointShapes) -> Int {
+    var count = 0
+    for shape in shapes {
+        for contour in shape {
+            count += contour.count
+        }
+    }
+    return count
+}
+
 private func approx(_ value: CGFloat, _ expected: CGFloat, eps: CGFloat = 1e-6) -> Bool {
     abs(value - expected) <= eps
 }
