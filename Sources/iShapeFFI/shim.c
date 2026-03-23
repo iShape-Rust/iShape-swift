@@ -80,6 +80,26 @@ size_t ishape_handle_flat_f64_shapes_shapes_len(FlatF64ShapesHandle buffer) {
     return ishape_flat_f64_shapes_shapes_len((const FlatF64ShapesBufferOpaque*)buffer);
 }
 
+bool ishape_handle_flat_f64_shapes_set_flat(
+    FlatF64ShapesHandle buffer,
+    const double* points,
+    size_t points_count,
+    const RangeFFI* contours,
+    size_t contours_count,
+    const RangeFFI* shapes,
+    size_t shapes_count
+) {
+    return ishape_flat_f64_shapes_set_flat(
+        (FlatF64ShapesBufferOpaque*)buffer,
+        points,
+        points_count,
+        contours,
+        contours_count,
+        shapes,
+        shapes_count
+    );
+}
+
 IntOverlayHandle ishape_handle_overlay_int_create(size_t capacity, IntOverlayOptions options) {
     return (IntOverlayHandle)ishape_overlay_int_create(capacity, options);
 }
@@ -122,10 +142,43 @@ bool ishape_handle_overlay_f64_overlay_into_flat(F64OverlayHandle handle, IntOve
     );
 }
 
-bool ishape_handle_outline_f64_contour_to_flat(const double* points, size_t count, double offset, FlatF64ShapesHandle output) {
-    return ishape_outline_f64_contour_to_flat(
-        points,
-        count,
+bool ishape_handle_overlay_f64_flat_shapes_into_flat(
+    FlatF64ShapesHandle subject,
+    FlatF64ShapesHandle clip,
+    IntOverlayRule overlay_rule,
+    IntFillRule fill_rule,
+    Float64OverlayOptions options,
+    FlatF64ShapesHandle output
+) {
+    return ishape_overlay_f64_flat_shapes_into_flat(
+        (const FlatF64ShapesBufferOpaque*)subject,
+        (const FlatF64ShapesBufferOpaque*)clip,
+        overlay_rule,
+        fill_rule,
+        options,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}
+
+bool ishape_handle_outline_f64_flat_shapes_to_flat(
+    FlatF64ShapesHandle input,
+    double offset,
+    FlatF64ShapesHandle output
+) {
+    return ishape_outline_f64_flat_shapes_to_flat(
+        (const FlatF64ShapesBufferOpaque*)input,
+        offset,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}
+
+bool ishape_handle_outline_f64_flat_contours_to_flat(
+    FlatF64ShapesHandle input,
+    double offset,
+    FlatF64ShapesHandle output
+) {
+    return ishape_outline_f64_flat_contours_to_flat(
+        (const FlatF64ShapesBufferOpaque*)input,
         offset,
         (FlatF64ShapesBufferOpaque*)output
     );

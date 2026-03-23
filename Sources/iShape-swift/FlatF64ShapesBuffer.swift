@@ -50,6 +50,49 @@ public final class FlatF64ShapesBuffer: @unchecked Sendable {
         Int(ishape_handle_flat_f64_shapes_shapes_len(handle))
     }
 
+    @discardableResult
+    public func setFlat(
+        points: [Double],
+        contourRanges: [RangeFFI],
+        shapeRanges: [RangeFFI]
+    ) -> Bool {
+        points.withUnsafeBufferPointer { pointsBuffer -> Bool in
+            contourRanges.withUnsafeBufferPointer { contourBuffer -> Bool in
+                shapeRanges.withUnsafeBufferPointer { shapeBuffer -> Bool in
+                    ishape_handle_flat_f64_shapes_set_flat(
+                        handle,
+                        pointsBuffer.baseAddress,
+                        pointsBuffer.count,
+                        contourBuffer.baseAddress,
+                        contourBuffer.count,
+                        shapeBuffer.baseAddress,
+                        shapeBuffer.count
+                    )
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    public func setContour(_ contour: CGPointContour) -> Bool {
+        setShape([contour])
+    }
+
+    @discardableResult
+    public func setShape(_ shape: CGPointShape) -> Bool {
+        setShapes([shape])
+    }
+
+    @discardableResult
+    public func setShapes(_ shapes: CGPointShapes) -> Bool {
+        let encoded = FlatF64ShapesBuffer.encodeFlat(shapes: shapes)
+        return setFlat(
+            points: encoded.points,
+            contourRanges: encoded.contourRanges,
+            shapeRanges: encoded.shapeRanges
+        )
+    }
+
     public func toCGPointShapes() -> CGPointShapes {
         let pointLength = pointCount
         let contourLength = contourCount
@@ -94,6 +137,39 @@ public final class FlatF64ShapesBuffer: @unchecked Sendable {
 }
 
 private extension FlatF64ShapesBuffer {
+    static func encodeFlat(
+        shapes: CGPointShapes
+    ) -> (points: [Double], contourRanges: [RangeFFI], shapeRanges: [RangeFFI]) {
+        var points: [Double] = []
+        points.reserveCapacity(
+            shapes.reduce(0) { partial, shape in
+                partial + shape.reduce(0) { $0 + ($1.count * 2) }
+            }
+        )
+
+        var contourRanges: [RangeFFI] = []
+        contourRanges.reserveCapacity(shapes.reduce(0) { $0 + $1.count })
+        var shapeRanges: [RangeFFI] = []
+        shapeRanges.reserveCapacity(shapes.count)
+
+        for shape in shapes {
+            let shapeStart = UInt64(contourRanges.count)
+            for contour in shape {
+                let contourStart = UInt64(points.count)
+                for point in contour {
+                    points.append(Double(point.x))
+                    points.append(Double(point.y))
+                }
+                let contourEnd = UInt64(points.count)
+                contourRanges.append(RangeFFI(start: contourStart, end: contourEnd))
+            }
+            let shapeEnd = UInt64(contourRanges.count)
+            shapeRanges.append(RangeFFI(start: shapeStart, end: shapeEnd))
+        }
+
+        return (points, contourRanges, shapeRanges)
+    }
+
     static func decodeShapes(
         points: [Double],
         contourRanges: [RangeFFI],

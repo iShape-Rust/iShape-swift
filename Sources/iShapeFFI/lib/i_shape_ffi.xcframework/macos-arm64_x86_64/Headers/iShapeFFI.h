@@ -92,6 +92,15 @@ const RangeFFI* ishape_flat_f64_shapes_contours_ptr(const FlatF64ShapesBufferOpa
 size_t ishape_flat_f64_shapes_contours_len(const FlatF64ShapesBufferOpaque* buffer);
 const RangeFFI* ishape_flat_f64_shapes_shapes_ptr(const FlatF64ShapesBufferOpaque* buffer);
 size_t ishape_flat_f64_shapes_shapes_len(const FlatF64ShapesBufferOpaque* buffer);
+bool ishape_flat_f64_shapes_set_flat(
+    FlatF64ShapesBufferOpaque* buffer,
+    const double* points,
+    size_t points_count,
+    const RangeFFI* contours,
+    size_t contours_count,
+    const RangeFFI* shapes,
+    size_t shapes_count
+);
 
 IntOverlayOpaque* ishape_overlay_int_create(size_t capacity, IntOverlayOptions options);
 void ishape_overlay_int_free(IntOverlayOpaque* handle);
@@ -102,7 +111,24 @@ F64OverlayOpaque* ishape_overlay_f64_create(size_t capacity, Float64OverlayOptio
 void ishape_overlay_f64_free(F64OverlayOpaque* handle);
 bool ishape_overlay_f64_add_contour(F64OverlayOpaque* handle, const double* points, size_t count, IntShapeType shape_type);
 bool ishape_overlay_f64_overlay_into_flat(F64OverlayOpaque* handle, IntOverlayRule overlay_rule, IntFillRule fill_rule, FlatF64ShapesBufferOpaque* output);
-bool ishape_outline_f64_contour_to_flat(const double* points, size_t count, double offset, FlatF64ShapesBufferOpaque* output);
+bool ishape_overlay_f64_flat_shapes_into_flat(
+    const FlatF64ShapesBufferOpaque* subject,
+    const FlatF64ShapesBufferOpaque* clip,
+    IntOverlayRule overlay_rule,
+    IntFillRule fill_rule,
+    Float64OverlayOptions options,
+    FlatF64ShapesBufferOpaque* output
+);
+bool ishape_outline_f64_flat_shapes_to_flat(
+    const FlatF64ShapesBufferOpaque* input,
+    double offset,
+    FlatF64ShapesBufferOpaque* output
+);
+bool ishape_outline_f64_flat_contours_to_flat(
+    const FlatF64ShapesBufferOpaque* input,
+    double offset,
+    FlatF64ShapesBufferOpaque* output
+);
 bool ishape_stroke_f64_contour_to_flat_styled(
     const double* points,
     size_t count,
@@ -145,6 +171,15 @@ const RangeFFI* ishape_handle_flat_f64_shapes_contours_ptr(FlatF64ShapesHandle b
 size_t ishape_handle_flat_f64_shapes_contours_len(FlatF64ShapesHandle buffer);
 const RangeFFI* ishape_handle_flat_f64_shapes_shapes_ptr(FlatF64ShapesHandle buffer);
 size_t ishape_handle_flat_f64_shapes_shapes_len(FlatF64ShapesHandle buffer);
+bool ishape_handle_flat_f64_shapes_set_flat(
+    FlatF64ShapesHandle buffer,
+    const double* points,
+    size_t points_count,
+    const RangeFFI* contours,
+    size_t contours_count,
+    const RangeFFI* shapes,
+    size_t shapes_count
+);
 
 IntOverlayHandle ishape_handle_overlay_int_create(size_t capacity, IntOverlayOptions options);
 void ishape_handle_overlay_int_free(IntOverlayHandle handle);
@@ -155,7 +190,24 @@ F64OverlayHandle ishape_handle_overlay_f64_create(size_t capacity, Float64Overla
 void ishape_handle_overlay_f64_free(F64OverlayHandle handle);
 bool ishape_handle_overlay_f64_add_contour(F64OverlayHandle handle, const double* points, size_t count, IntShapeType shape_type);
 bool ishape_handle_overlay_f64_overlay_into_flat(F64OverlayHandle handle, IntOverlayRule overlay_rule, IntFillRule fill_rule, FlatF64ShapesHandle output);
-bool ishape_handle_outline_f64_contour_to_flat(const double* points, size_t count, double offset, FlatF64ShapesHandle output);
+bool ishape_handle_overlay_f64_flat_shapes_into_flat(
+    FlatF64ShapesHandle subject,
+    FlatF64ShapesHandle clip,
+    IntOverlayRule overlay_rule,
+    IntFillRule fill_rule,
+    Float64OverlayOptions options,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_outline_f64_flat_shapes_to_flat(
+    FlatF64ShapesHandle input,
+    double offset,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_outline_f64_flat_contours_to_flat(
+    FlatF64ShapesHandle input,
+    double offset,
+    FlatF64ShapesHandle output
+);
 bool ishape_handle_stroke_f64_contour_to_flat_styled(
     const double* points,
     size_t count,

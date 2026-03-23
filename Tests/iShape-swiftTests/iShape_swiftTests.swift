@@ -305,7 +305,7 @@ import Testing
     assert(shapes == nil)
 }
 
-@Test func testCGPointOutlineOffsetSquareRoundJoinPositiveDistance() {
+@Test func testCGPointOutlineOffsetSquarePositiveDistance() {
     let square: [CGPoint] = [
         CGPoint(x: 0, y: 0),
         CGPoint(x: 10, y: 0),
@@ -313,32 +313,83 @@ import Testing
         CGPoint(x: 0, y: 10),
     ]
 
-    let roundShapes = CGPointOutlineOffset.offsetContours(
+    let shapes = CGPointOutlineOffset.offsetContours(
         points: square,
-        distance: 1,
-        style: OutlineOffsetStyle(lineJoin: .round(0.2))
-    )
-    let bevelShapes = CGPointOutlineOffset.offsetContours(
-        points: square,
-        distance: 1,
-        style: OutlineOffsetStyle(lineJoin: .bevel)
+        distance: 1
     )
 
-    assert(roundShapes != nil)
-    assert(bevelShapes != nil)
-    assert(!roundShapes!.isEmpty)
-    assert(!bevelShapes!.isEmpty)
+    assert(shapes != nil)
+    assert(!shapes!.isEmpty)
 
-    let roundBounds = bounds(of: roundShapes!)
-    assert(roundBounds != nil)
-    assert(approx(roundBounds!.minX, -1))
-    assert(approx(roundBounds!.minY, -1))
-    assert(approx(roundBounds!.maxX, 11))
-    assert(approx(roundBounds!.maxY, 11))
+    let resultBounds = bounds(of: shapes!)
+    assert(resultBounds != nil)
+    assert(approx(resultBounds!.minX, -1))
+    assert(approx(resultBounds!.minY, -1))
+    assert(approx(resultBounds!.maxX, 11))
+    assert(approx(resultBounds!.maxY, 11))
+}
 
-    let roundPoints = totalPointCount(in: roundShapes!)
-    let bevelPoints = totalPointCount(in: bevelShapes!)
-    assert(roundPoints > bevelPoints)
+@Test func testFlatF64ShapeOffsetFromBuffer() {
+    let input = FlatF64ShapesBuffer()
+    let output = FlatF64ShapesBuffer()
+    let square: CGPointShape = [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10),
+        CGPoint(x: 0, y: 10),
+    ]]
+
+    assert(input.setShape(square))
+    assert(FlatF64ShapeOffset.offset(input: input, distance: 1, output: output))
+
+    let result = output.toCGPointShapes()
+    assert(!result.isEmpty)
+
+    let resultBounds = bounds(of: result)
+    assert(resultBounds != nil)
+    assert(approx(resultBounds!.minX, -1))
+    assert(approx(resultBounds!.minY, -1))
+    assert(approx(resultBounds!.maxX, 11))
+    assert(approx(resultBounds!.maxY, 11))
+}
+
+@Test func testFlatF64ShapeBooleanUnionFromBuffers() {
+    let subject = FlatF64ShapesBuffer()
+    let clip = FlatF64ShapesBuffer()
+    let output = FlatF64ShapesBuffer()
+
+    let subjectShape: CGPointShape = [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 0, y: 4),
+        CGPoint(x: 4, y: 4),
+        CGPoint(x: 4, y: 0),
+    ]]
+    let clipShape: CGPointShape = [[
+        CGPoint(x: 2, y: 0),
+        CGPoint(x: 2, y: 4),
+        CGPoint(x: 6, y: 4),
+        CGPoint(x: 6, y: 0),
+    ]]
+
+    assert(subject.setShape(subjectShape))
+    assert(clip.setShape(clipShape))
+    assert(FlatF64ShapeBoolean.overlay(
+        subject: subject,
+        clip: clip,
+        overlayRule: .union,
+        fillRule: .evenOdd,
+        output: output
+    ))
+
+    let result = output.toCGPointShapes()
+    assert(!result.isEmpty)
+
+    let resultBounds = bounds(of: result)
+    assert(resultBounds != nil)
+    assert(approx(resultBounds!.minX, 0))
+    assert(approx(resultBounds!.minY, 0))
+    assert(approx(resultBounds!.maxX, 6))
+    assert(approx(resultBounds!.maxY, 4))
 }
 
 private func bounds(of shapes: CGPointShapes) -> CGRect? {
@@ -365,16 +416,6 @@ private func bounds(of shapes: CGPointShapes) -> CGRect? {
     }
 
     return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-}
-
-private func totalPointCount(in shapes: CGPointShapes) -> Int {
-    var count = 0
-    for shape in shapes {
-        for contour in shape {
-            count += contour.count
-        }
-    }
-    return count
 }
 
 private func approx(_ value: CGFloat, _ expected: CGFloat, eps: CGFloat = 1e-6) -> Bool {
