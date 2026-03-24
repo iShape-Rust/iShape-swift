@@ -12,13 +12,8 @@ public enum CGPointOutlineOffset {
         contours: CGPointShape,
         distance: CGFloat
     ) -> CGPointShapes? {
-        let validContours = contours.filter { $0.count >= 3 }
-        guard !validContours.isEmpty else {
-            return nil
-        }
-
         let input = FlatF64ShapesBuffer()
-        guard input.setShape(validContours) else {
+        guard input.setShape(contours) else {
             return nil
         }
 
@@ -26,16 +21,30 @@ public enum CGPointOutlineOffset {
     }
 
     public static func offsetShape(
-        contours: CGPointShape,
+        shape: CGPointShape,
         distance: CGFloat
     ) -> CGPointShapes? {
-        let validContours = contours.filter { $0.count >= 3 }
-        guard !validContours.isEmpty else {
+        let input = FlatF64ShapesBuffer()
+        guard input.setShape(shape) else {
             return nil
         }
 
+        return FlatF64ShapeOffset.offset(input: input, distance: distance)
+    }
+
+    public static func offsetShape(
+        contours: CGPointShape,
+        distance: CGFloat
+    ) -> CGPointShapes? {
+        offsetShape(shape: contours, distance: distance)
+    }
+
+    public static func offsetShapes(
+        shapes: CGPointShapes,
+        distance: CGFloat
+    ) -> CGPointShapes? {
         let input = FlatF64ShapesBuffer()
-        guard input.setShape(validContours) else {
+        guard input.setShapes(shapes) else {
             return nil
         }
 

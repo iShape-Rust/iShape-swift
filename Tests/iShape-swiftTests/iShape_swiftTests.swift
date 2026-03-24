@@ -329,6 +329,62 @@ import Testing
     assert(approx(resultBounds!.maxY, 11))
 }
 
+@Test func testCGPointOutlineOffsetShapeNamedArgument() {
+    let square: CGPointShape = [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10),
+        CGPoint(x: 0, y: 10),
+    ]]
+
+    let shapes = CGPointOutlineOffset.offsetShape(
+        shape: square,
+        distance: 1
+    )
+
+    assert(shapes != nil)
+    assert(!shapes!.isEmpty)
+
+    let resultBounds = bounds(of: shapes!)
+    assert(resultBounds != nil)
+    assert(approx(resultBounds!.minX, -1))
+    assert(approx(resultBounds!.minY, -1))
+    assert(approx(resultBounds!.maxX, 11))
+    assert(approx(resultBounds!.maxY, 11))
+}
+
+@Test func testCGPointOutlineOffsetShapesPositiveDistance() {
+    let shapesInput: CGPointShapes = [
+        [[
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 10, y: 0),
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 0, y: 10),
+        ]],
+        [[
+            CGPoint(x: 20, y: 0),
+            CGPoint(x: 30, y: 0),
+            CGPoint(x: 30, y: 10),
+            CGPoint(x: 20, y: 10),
+        ]]
+    ]
+
+    let shapes = CGPointOutlineOffset.offsetShapes(
+        shapes: shapesInput,
+        distance: 1
+    )
+
+    assert(shapes != nil)
+    assert(!shapes!.isEmpty)
+
+    let resultBounds = bounds(of: shapes!)
+    assert(resultBounds != nil)
+    assert(approx(resultBounds!.minX, -1))
+    assert(approx(resultBounds!.minY, -1))
+    assert(approx(resultBounds!.maxX, 31))
+    assert(approx(resultBounds!.maxY, 11))
+}
+
 @Test func testFlatF64ShapeOffsetFromBuffer() {
     let input = FlatF64ShapesBuffer()
     let output = FlatF64ShapesBuffer()
