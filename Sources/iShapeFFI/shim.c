@@ -211,3 +211,29 @@ bool ishape_handle_stroke_f64_contour_to_flat_styled(
         (FlatF64ShapesBufferOpaque*)output
     );
 }
+
+bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
+    const double* vertices,
+    size_t count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FlatF64ShapesHandle output
+) {
+    return ishape_variable_stroke_f64_contour_to_flat_styled(
+        vertices,
+        count,
+        is_closed_path,
+        join_kind,
+        join_value,
+        start_cap_kind,
+        start_cap_value,
+        end_cap_kind,
+        end_cap_value,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}

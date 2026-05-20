@@ -142,6 +142,89 @@ public enum CGPointStrokeOffset {
     }
 }
 
+@frozen
+public struct CGPointVariableStrokeVertex: Sendable {
+    public var point: CGPoint
+    public var width: CGFloat
+
+    @inlinable
+    public init(point: CGPoint, width: CGFloat) {
+        self.point = point
+        self.width = width
+    }
+
+    @inlinable
+    public init(x: CGFloat, y: CGFloat, width: CGFloat) {
+        self.init(point: CGPoint(x: x, y: y), width: width)
+    }
+}
+
+public enum CGPointVariableStrokeOffset {
+    public static func offsetContours(
+        vertices: [CGPointVariableStrokeVertex],
+        isClosedPath: Bool = true,
+        style: StrokeOffsetStyle = .default
+    ) -> CGPointShapes? {
+        let normalized = normalizeVariableStrokeVertices(vertices)
+        let minCount = isClosedPath ? 3 : 2
+        guard normalized.count >= minCount else {
+            return nil
+        }
+
+        var flat: [Double] = []
+        flat.reserveCapacity(normalized.count * 3)
+        for vertex in normalized {
+            guard vertex.width.isFinite, vertex.width > 0 else {
+                return nil
+            }
+
+            flat.append(Double(vertex.point.x))
+            flat.append(Double(vertex.point.y))
+            flat.append(Double(vertex.width))
+        }
+
+        let buffer = FlatF64ShapesBuffer()
+
+        let success = flat.withUnsafeBufferPointer { verticesBuffer -> Bool in
+            ishape_handle_variable_stroke_f64_contour_to_flat_styled(
+                verticesBuffer.baseAddress,
+                verticesBuffer.count,
+                isClosedPath,
+                style.lineJoin.ffiValue.kind,
+                style.lineJoin.ffiValue.value,
+                style.startCap.ffiValue.kind,
+                style.startCap.ffiValue.value,
+                style.endCap.ffiValue.kind,
+                style.endCap.ffiValue.value,
+                buffer.rawPointer
+            )
+        }
+
+        guard success else {
+            return nil
+        }
+
+        let shapes = buffer.toCGPointShapes()
+        return shapes.isEmpty ? nil : shapes
+    }
+
+    public static func offsetPath(
+        vertices: [CGPointVariableStrokeVertex],
+        isClosedPath: Bool = true,
+        style: StrokeOffsetStyle = .default
+    ) -> CGPath? {
+        guard let shapes = offsetContours(
+            vertices: vertices,
+            isClosedPath: isClosedPath,
+            style: style
+        ) else {
+            return nil
+        }
+
+        return shapesToPath(shapes)
+    }
+}
+
 private extension CGPathBuffering {
     struct ExtractedContour {
         var points: CGPointContour
@@ -232,6 +315,21 @@ private func normalizeContour(_ contour: CGPointContour) -> CGPointContour {
     }
 
     return contour
+}
+
+@inline(__always)
+private func normalizeVariableStrokeVertices(
+    _ vertices: [CGPointVariableStrokeVertex]
+) -> [CGPointVariableStrokeVertex] {
+    guard vertices.count >= 2 else {
+        return vertices
+    }
+
+    if pointsNear(vertices.first!.point, vertices.last!.point) {
+        return Array(vertices.dropLast())
+    }
+
+    return vertices
 }
 
 @inline(__always)

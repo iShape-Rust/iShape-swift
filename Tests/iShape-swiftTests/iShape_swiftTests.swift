@@ -305,6 +305,42 @@ import Testing
     assert(shapes == nil)
 }
 
+@Test func testCGPointVariableStrokeOffsetOpenPolyline() {
+    let vertices: [CGPointVariableStrokeVertex] = [
+        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
+        CGPointVariableStrokeVertex(x: 10, y: 0, width: 8),
+        CGPointVariableStrokeVertex(x: 20, y: 10, width: 4),
+    ]
+
+    let shapes = CGPointVariableStrokeOffset.offsetContours(
+        vertices: vertices,
+        isClosedPath: false,
+        style: StrokeOffsetStyle(lineJoin: .round(0.2), lineCap: .round(0.2))
+    )
+
+    assert(shapes != nil)
+    assert(!shapes!.isEmpty)
+
+    let resultBounds = bounds(of: shapes!)
+    assert(resultBounds != nil)
+    assert(resultBounds!.minX < 0)
+    assert(resultBounds!.maxX > 20)
+}
+
+@Test func testCGPointVariableStrokeOffsetRejectsInvalidWidth() {
+    let vertices: [CGPointVariableStrokeVertex] = [
+        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
+        CGPointVariableStrokeVertex(x: 10, y: 0, width: -1),
+    ]
+
+    let shapes = CGPointVariableStrokeOffset.offsetContours(
+        vertices: vertices,
+        isClosedPath: false
+    )
+
+    assert(shapes == nil)
+}
+
 @Test func testCGPointOutlineOffsetSquarePositiveDistance() {
     let square: [CGPoint] = [
         CGPoint(x: 0, y: 0),

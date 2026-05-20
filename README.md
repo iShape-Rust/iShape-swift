@@ -2,13 +2,13 @@
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
-Current package version: `0.1.0`
+Current package version: `0.2.0`
 
 ### Installation
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.1.0")
+    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.0")
 ],
 targets: [
     .target(
@@ -78,4 +78,34 @@ overlay.addClip([[
 ]])
 
 let result: CGPointShapes? = overlay.overlay(overlayRule: .union, fillRule: .evenOdd)
+```
+
+### Stroke Offsets
+
+Use `CGPointStrokeOffset` for a constant-width path stroke:
+
+```swift
+let stroked = CGPointStrokeOffset.offsetContours(
+    points: [
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10),
+    ],
+    distance: 1,
+    isClosedPath: false,
+    style: StrokeOffsetStyle(lineJoin: .round(0.2), lineCap: .round(0.2))
+)
+```
+
+Use `CGPointVariableStrokeOffset` when every vertex has its own full stroke width:
+
+```swift
+let variable = CGPointVariableStrokeOffset.offsetContours(
+    vertices: [
+        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
+        CGPointVariableStrokeVertex(x: 10, y: 0, width: 8),
+        CGPointVariableStrokeVertex(x: 20, y: 10, width: 4),
+    ],
+    isClosedPath: false
+)
 ```

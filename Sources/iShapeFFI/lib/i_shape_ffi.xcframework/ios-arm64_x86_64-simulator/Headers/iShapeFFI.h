@@ -142,6 +142,18 @@ bool ishape_stroke_f64_contour_to_flat_styled(
     double end_cap_value,
     FlatF64ShapesBufferOpaque* output
 );
+bool ishape_variable_stroke_f64_contour_to_flat_styled(
+    const double* vertices,
+    size_t count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FlatF64ShapesBufferOpaque* output
+);
 
 typedef void* FlatShapesHandle;
 typedef void* FlatF64ShapesHandle;
@@ -212,6 +224,18 @@ bool ishape_handle_stroke_f64_contour_to_flat_styled(
     const double* points,
     size_t count,
     double width,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
+    const double* vertices,
+    size_t count,
     bool is_closed_path,
     uint32_t join_kind,
     double join_value,
