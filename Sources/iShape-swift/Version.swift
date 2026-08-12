@@ -1,4 +1,4 @@
 /// Public package version marker. Keep in sync with the git tag.
 public enum IShapeSwift {
-    public static let version = "0.2.4"
+    public static let version = "0.2.5"
 }

@@ -281,3 +281,13 @@ bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
         (FlatF64ShapesBufferOpaque*)output
     );
 }
+
+bool ishape_handle_triangle_f64_shapes_to_convex_polygons(
+    FlatF64ShapesHandle shapes,
+    FlatF64ShapesHandle output
+) {
+    return ishape_triangle_f64_shapes_to_convex_polygons(
+        (const FlatF64ShapesBufferOpaque*)shapes,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}

@@ -169,6 +169,10 @@ bool ishape_variable_stroke_f64_contour_to_flat_styled(
     double end_cap_value,
     FlatF64ShapesBufferOpaque* output
 );
+bool ishape_triangle_f64_shapes_to_convex_polygons(
+    const FlatF64ShapesBufferOpaque* shapes,
+    FlatF64ShapesBufferOpaque* output
+);
 
 typedef void* FlatShapesHandle;
 typedef void* FlatF64ShapesHandle;
@@ -267,6 +271,10 @@ bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
     double start_cap_value,
     uint32_t end_cap_kind,
     double end_cap_value,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_triangle_f64_shapes_to_convex_polygons(
+    FlatF64ShapesHandle shapes,
     FlatF64ShapesHandle output
 );
 

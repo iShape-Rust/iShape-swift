@@ -2,13 +2,13 @@
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
-Current package version: `0.2.4`
+Current package version: `0.2.5`
 
 ### Installation
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.4")
+    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.5")
 ],
 targets: [
     .target(
@@ -127,3 +127,24 @@ let rootShapes = hierarchy?.shapes.enumerated().compactMap { index, shape in
 
 `parentContourIndex` is a global index across the flattened contour order of
 `shapes`, while the parent and child shape indices address `shapes` directly.
+
+### Convex Decomposition
+
+`CGPointConvexDecomposition` triangulates shapes, applies Delaunay refinement,
+and groups the triangles into non-overlapping counter-clockwise convex polygons:
+
+```swift
+let polygons = CGPointConvexDecomposition.toConvexPolygons(
+    shape: [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 6, y: 0),
+        CGPoint(x: 6, y: 2),
+        CGPoint(x: 2, y: 2),
+        CGPoint(x: 2, y: 6),
+        CGPoint(x: 0, y: 6),
+    ]]
+)
+```
+
+Use the `input:output:` overload with `FlatF64ShapesBuffer` to reuse allocated
+FFI buffers across calls.

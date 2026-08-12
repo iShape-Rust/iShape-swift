@@ -547,6 +547,45 @@ import Testing
     assert(approx(resultBounds!.maxY, 4))
 }
 
+@Test func testCGPointConvexDecompositionSplitsConcaveShape() {
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 6, y: 0),
+        CGPoint(x: 6, y: 2),
+        CGPoint(x: 2, y: 2),
+        CGPoint(x: 2, y: 6),
+        CGPoint(x: 0, y: 6),
+    ]]
+
+    let polygons = CGPointConvexDecomposition.toConvexPolygons(shape: shape)
+
+    assert(polygons != nil)
+    assert(polygons!.count > 1)
+    assert(polygons!.allSatisfy { $0.count >= 3 })
+    assert(polygons!.allSatisfy(isCounterClockwiseConvex))
+
+    let sourceArea = abs(signedArea(shape[0]))
+    let polygonsArea = polygons!.reduce(CGFloat.zero) { $0 + abs(signedArea($1)) }
+    assert(approx(polygonsArea, sourceArea))
+}
+
+@Test func testCGPointConvexDecompositionFlatBufferOutput() {
+    let input = FlatF64ShapesBuffer()
+    let output = FlatF64ShapesBuffer()
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 4, y: 0),
+        CGPoint(x: 4, y: 4),
+        CGPoint(x: 0, y: 4),
+    ]]
+
+    assert(input.setShape(shape))
+    assert(CGPointConvexDecomposition.toConvexPolygons(input: input, output: output))
+    assert(output.shapeCount == 1)
+    assert(output.contourCount == 1)
+    assert(output.toCGPointShapes()[0][0].count == 4)
+}
+
 private func bounds(of shapes: CGPointShapes) -> CGRect? {
     var minX = CGFloat.infinity
     var minY = CGFloat.infinity
@@ -575,4 +614,35 @@ private func bounds(of shapes: CGPointShapes) -> CGRect? {
 
 private func approx(_ value: CGFloat, _ expected: CGFloat, eps: CGFloat = 1e-6) -> Bool {
     abs(value - expected) <= eps
+}
+
+private func signedArea(_ polygon: CGPointContour) -> CGFloat {
+    guard polygon.count >= 3 else {
+        return 0
+    }
+
+    var sum = CGFloat.zero
+    for index in polygon.indices {
+        let next = polygon[(index + 1) % polygon.count]
+        let point = polygon[index]
+        sum += point.x * next.y - next.x * point.y
+    }
+    return 0.5 * sum
+}
+
+private func isCounterClockwiseConvex(_ polygon: CGPointContour) -> Bool {
+    guard polygon.count >= 3, signedArea(polygon) > 0 else {
+        return false
+    }
+
+    for index in polygon.indices {
+        let a = polygon[index]
+        let b = polygon[(index + 1) % polygon.count]
+        let c = polygon[(index + 2) % polygon.count]
+        let cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)
+        if cross < -1e-6 {
+            return false
+        }
+    }
+    return true
 }
