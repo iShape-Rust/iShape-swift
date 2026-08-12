@@ -1,5 +1,35 @@
 #include "iShapeFFI.h"
 
+FloatFlatShapeHierarchyHandle ishape_handle_float_flat_shape_hierarchy_create(void) {
+    return (FloatFlatShapeHierarchyHandle)ishape_float_flat_shape_hierarchy_create();
+}
+
+void ishape_handle_float_flat_shape_hierarchy_clear(FloatFlatShapeHierarchyHandle hierarchy) {
+    ishape_float_flat_shape_hierarchy_clear((FloatFlatShapeHierarchyOpaque*)hierarchy);
+}
+
+void ishape_handle_float_flat_shape_hierarchy_free(FloatFlatShapeHierarchyHandle hierarchy) {
+    ishape_float_flat_shape_hierarchy_free((FloatFlatShapeHierarchyOpaque*)hierarchy);
+}
+
+FlatF64ShapesHandle ishape_handle_float_flat_shape_hierarchy_shapes(FloatFlatShapeHierarchyHandle hierarchy) {
+    return (FlatF64ShapesHandle)ishape_float_flat_shape_hierarchy_shapes(
+        (const FloatFlatShapeHierarchyOpaque*)hierarchy
+    );
+}
+
+const ShapeHierarchyLinkFFI* ishape_handle_float_flat_shape_hierarchy_links_ptr(FloatFlatShapeHierarchyHandle hierarchy) {
+    return ishape_float_flat_shape_hierarchy_links_ptr(
+        (const FloatFlatShapeHierarchyOpaque*)hierarchy
+    );
+}
+
+size_t ishape_handle_float_flat_shape_hierarchy_links_len(FloatFlatShapeHierarchyHandle hierarchy) {
+    return ishape_float_flat_shape_hierarchy_links_len(
+        (const FloatFlatShapeHierarchyOpaque*)hierarchy
+    );
+}
+
 FlatShapesHandle ishape_handle_flat_shapes_create(void) {
     return (FlatShapesHandle)ishape_flat_shapes_create();
 }
@@ -235,5 +265,61 @@ bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
         end_cap_kind,
         end_cap_value,
         (FlatF64ShapesBufferOpaque*)output
+    );
+}
+
+bool ishape_handle_variable_stroke_f64_contour_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyHandle output
+) {
+    return ishape_variable_stroke_f64_contour_to_flat_hierarchy_styled(
+        vertices,
+        count,
+        is_closed_path,
+        join_kind,
+        join_value,
+        start_cap_kind,
+        start_cap_value,
+        end_cap_kind,
+        end_cap_value,
+        (FloatFlatShapeHierarchyOpaque*)output
+    );
+}
+
+bool ishape_handle_variable_stroke_f64_contours_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    const RangeFFI* contour_ranges,
+    size_t contour_count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyHandle output
+) {
+    return ishape_variable_stroke_f64_contours_to_flat_hierarchy_styled(
+        vertices,
+        count,
+        contour_ranges,
+        contour_count,
+        is_closed_path,
+        join_kind,
+        join_value,
+        start_cap_kind,
+        start_cap_value,
+        end_cap_kind,
+        end_cap_value,
+        (FloatFlatShapeHierarchyOpaque*)output
     );
 }

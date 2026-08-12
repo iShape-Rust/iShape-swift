@@ -7,6 +7,7 @@
 
 typedef void FlatShapesBufferOpaque;
 typedef void FlatF64ShapesBufferOpaque;
+typedef void FloatFlatShapeHierarchyOpaque;
 typedef void IntOverlayOpaque;
 typedef void F64OverlayOpaque;
 
@@ -14,6 +15,12 @@ typedef struct RangeFFI {
     uint64_t start;
     uint64_t end;
 } RangeFFI;
+
+typedef struct ShapeHierarchyLinkFFI {
+    size_t parent_shape_index;
+    size_t parent_contour_index;
+    size_t child_shape_index;
+} ShapeHierarchyLinkFFI;
 
 typedef enum IntShapeType {
     IntShapeTypeSubject = 0,
@@ -102,6 +109,13 @@ bool ishape_flat_f64_shapes_set_flat(
     size_t shapes_count
 );
 
+FloatFlatShapeHierarchyOpaque* ishape_float_flat_shape_hierarchy_create(void);
+void ishape_float_flat_shape_hierarchy_clear(FloatFlatShapeHierarchyOpaque* hierarchy);
+void ishape_float_flat_shape_hierarchy_free(FloatFlatShapeHierarchyOpaque* hierarchy);
+const FlatF64ShapesBufferOpaque* ishape_float_flat_shape_hierarchy_shapes(const FloatFlatShapeHierarchyOpaque* hierarchy);
+const ShapeHierarchyLinkFFI* ishape_float_flat_shape_hierarchy_links_ptr(const FloatFlatShapeHierarchyOpaque* hierarchy);
+size_t ishape_float_flat_shape_hierarchy_links_len(const FloatFlatShapeHierarchyOpaque* hierarchy);
+
 IntOverlayOpaque* ishape_overlay_int_create(size_t capacity, IntOverlayOptions options);
 void ishape_overlay_int_free(IntOverlayOpaque* handle);
 bool ishape_overlay_int_add_contour(IntOverlayOpaque* handle, const int32_t* points, size_t count, IntShapeType shape_type);
@@ -154,9 +168,36 @@ bool ishape_variable_stroke_f64_contour_to_flat_styled(
     double end_cap_value,
     FlatF64ShapesBufferOpaque* output
 );
+bool ishape_variable_stroke_f64_contour_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyOpaque* output
+);
+bool ishape_variable_stroke_f64_contours_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    const RangeFFI* contour_ranges,
+    size_t contour_count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyOpaque* output
+);
 
 typedef void* FlatShapesHandle;
 typedef void* FlatF64ShapesHandle;
+typedef void* FloatFlatShapeHierarchyHandle;
 typedef void* IntOverlayHandle;
 typedef void* F64OverlayHandle;
 
@@ -192,6 +233,13 @@ bool ishape_handle_flat_f64_shapes_set_flat(
     const RangeFFI* shapes,
     size_t shapes_count
 );
+
+FloatFlatShapeHierarchyHandle ishape_handle_float_flat_shape_hierarchy_create(void);
+void ishape_handle_float_flat_shape_hierarchy_clear(FloatFlatShapeHierarchyHandle hierarchy);
+void ishape_handle_float_flat_shape_hierarchy_free(FloatFlatShapeHierarchyHandle hierarchy);
+FlatF64ShapesHandle ishape_handle_float_flat_shape_hierarchy_shapes(FloatFlatShapeHierarchyHandle hierarchy);
+const ShapeHierarchyLinkFFI* ishape_handle_float_flat_shape_hierarchy_links_ptr(FloatFlatShapeHierarchyHandle hierarchy);
+size_t ishape_handle_float_flat_shape_hierarchy_links_len(FloatFlatShapeHierarchyHandle hierarchy);
 
 IntOverlayHandle ishape_handle_overlay_int_create(size_t capacity, IntOverlayOptions options);
 void ishape_handle_overlay_int_free(IntOverlayHandle handle);
@@ -244,6 +292,32 @@ bool ishape_handle_variable_stroke_f64_contour_to_flat_styled(
     uint32_t end_cap_kind,
     double end_cap_value,
     FlatF64ShapesHandle output
+);
+bool ishape_handle_variable_stroke_f64_contour_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyHandle output
+);
+bool ishape_handle_variable_stroke_f64_contours_to_flat_hierarchy_styled(
+    const double* vertices,
+    size_t count,
+    const RangeFFI* contour_ranges,
+    size_t contour_count,
+    bool is_closed_path,
+    uint32_t join_kind,
+    double join_value,
+    uint32_t start_cap_kind,
+    double start_cap_value,
+    uint32_t end_cap_kind,
+    double end_cap_value,
+    FloatFlatShapeHierarchyHandle output
 );
 
 #endif /* ISHAPE_FFI_H */

@@ -94,9 +94,14 @@ public final class FlatF64ShapesBuffer: @unchecked Sendable {
     }
 
     public func toCGPointShapes() -> CGPointShapes {
-        let pointLength = pointCount
-        let contourLength = contourCount
-        let shapeLength = shapeCount
+        Self.decodeCGPointShapes(handle: handle)
+    }
+
+    @usableFromInline
+    internal static func decodeCGPointShapes(handle: FlatF64ShapesHandle) -> CGPointShapes {
+        let pointLength = Int(ishape_handle_flat_f64_shapes_points_len(handle))
+        let contourLength = Int(ishape_handle_flat_f64_shapes_contours_len(handle))
+        let shapeLength = Int(ishape_handle_flat_f64_shapes_shapes_len(handle))
 
         let points: [Double]
         if pointLength > 0, let pointer = ishape_handle_flat_f64_shapes_points_ptr(handle) {
@@ -123,7 +128,7 @@ public final class FlatF64ShapesBuffer: @unchecked Sendable {
             return []
         }
 
-        return FlatF64ShapesBuffer.decodeShapes(
+        return decodeShapes(
             points: points,
             contourRanges: contourRanges,
             shapeRanges: shapeRanges
