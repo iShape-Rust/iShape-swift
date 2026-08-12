@@ -197,84 +197,6 @@ public enum CGPointVariableStrokeOffset {
         return shapes.isEmpty ? nil : shapes
     }
 
-    public static func offsetHierarchy(
-        vertices: [CGPointVariableStrokeVertex],
-        isClosedPath: Bool = true,
-        style: StrokeOffsetStyle = .default
-    ) -> CGPointShapeHierarchy? {
-        guard let input = prepareVariableStrokeInput(
-            vertices: vertices,
-            isClosedPath: isClosedPath
-        ) else {
-            return nil
-        }
-
-        let buffer = FloatFlatShapeHierarchyBuffer()
-        let success = input.flatVertices.withUnsafeBufferPointer { verticesBuffer -> Bool in
-            ishape_handle_variable_stroke_f64_contour_to_flat_hierarchy_styled(
-                verticesBuffer.baseAddress,
-                verticesBuffer.count,
-                isClosedPath,
-                style.lineJoin.ffiValue.kind,
-                style.lineJoin.ffiValue.value,
-                style.startCap.ffiValue.kind,
-                style.startCap.ffiValue.value,
-                style.endCap.ffiValue.kind,
-                style.endCap.ffiValue.value,
-                buffer.handle
-            )
-        }
-
-        guard success else {
-            return nil
-        }
-
-        let hierarchy = buffer.toCGPointShapeHierarchy()
-        return hierarchy.shapes.isEmpty ? nil : hierarchy
-    }
-
-    /// Offsets multiple centerlines in one operation so nesting between their
-    /// resulting shapes can be represented by hierarchy links.
-    public static func offsetHierarchy(
-        contours: [[CGPointVariableStrokeVertex]],
-        isClosedPath: Bool = true,
-        style: StrokeOffsetStyle = .default
-    ) -> CGPointShapeHierarchy? {
-        guard let input = prepareVariableStrokeContoursInput(
-            contours: contours,
-            isClosedPath: isClosedPath
-        ) else {
-            return nil
-        }
-
-        let buffer = FloatFlatShapeHierarchyBuffer()
-        let success = input.flatVertices.withUnsafeBufferPointer { verticesBuffer -> Bool in
-            input.contourRanges.withUnsafeBufferPointer { rangesBuffer -> Bool in
-                ishape_handle_variable_stroke_f64_contours_to_flat_hierarchy_styled(
-                    verticesBuffer.baseAddress,
-                    verticesBuffer.count,
-                    rangesBuffer.baseAddress,
-                    rangesBuffer.count,
-                    isClosedPath,
-                    style.lineJoin.ffiValue.kind,
-                    style.lineJoin.ffiValue.value,
-                    style.startCap.ffiValue.kind,
-                    style.startCap.ffiValue.value,
-                    style.endCap.ffiValue.kind,
-                    style.endCap.ffiValue.value,
-                    buffer.handle
-                )
-            }
-        }
-
-        guard success else {
-            return nil
-        }
-
-        let hierarchy = buffer.toCGPointShapeHierarchy()
-        return hierarchy.shapes.isEmpty ? nil : hierarchy
-    }
-
     public static func offsetPath(
         vertices: [CGPointVariableStrokeVertex],
         isClosedPath: Bool = true,
@@ -294,11 +216,6 @@ public enum CGPointVariableStrokeOffset {
 
 private struct PreparedVariableStrokeInput {
     let flatVertices: [Double]
-}
-
-private struct PreparedVariableStrokeContoursInput {
-    let flatVertices: [Double]
-    let contourRanges: [RangeFFI]
 }
 
 @inline(__always)
@@ -325,37 +242,6 @@ private func prepareVariableStrokeInput(
     }
 
     return PreparedVariableStrokeInput(flatVertices: flat)
-}
-
-private func prepareVariableStrokeContoursInput(
-    contours: [[CGPointVariableStrokeVertex]],
-    isClosedPath: Bool
-) -> PreparedVariableStrokeContoursInput? {
-    guard !contours.isEmpty else {
-        return nil
-    }
-
-    var flatVertices: [Double] = []
-    var contourRanges: [RangeFFI] = []
-    contourRanges.reserveCapacity(contours.count)
-
-    for contour in contours {
-        guard let input = prepareVariableStrokeInput(
-            vertices: contour,
-            isClosedPath: isClosedPath
-        ) else {
-            return nil
-        }
-
-        let start = UInt64(flatVertices.count)
-        flatVertices.append(contentsOf: input.flatVertices)
-        contourRanges.append(RangeFFI(start: start, end: UInt64(flatVertices.count)))
-    }
-
-    return PreparedVariableStrokeContoursInput(
-        flatVertices: flatVertices,
-        contourRanges: contourRanges
-    )
 }
 
 private extension CGPathBuffering {

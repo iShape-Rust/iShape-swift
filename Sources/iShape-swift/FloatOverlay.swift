@@ -98,6 +98,24 @@ public final class FloatOverlay: @unchecked Sendable {
         }
         return buffer.toCGPointShapes()
     }
+
+    public func overlayHierarchy(
+        overlayRule: OverlayRule,
+        fillRule: FillRule
+    ) -> CGPointShapeHierarchy? {
+        let buffer = FloatFlatShapeHierarchyBuffer()
+        guard ishape_handle_overlay_f64_overlay_into_flat_hierarchy(
+            handle,
+            overlayRule.ffiValue,
+            fillRule.ffiValue,
+            buffer.handle
+        ) else {
+            return nil
+        }
+
+        let hierarchy = buffer.toCGPointShapeHierarchy()
+        return hierarchy.shapes.isEmpty ? nil : hierarchy
+    }
 }
 
 public extension FloatOverlay {

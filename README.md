@@ -2,13 +2,13 @@
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
-Current package version: `0.2.3`
+Current package version: `0.2.4`
 
 ### Installation
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.3")
+    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.4")
 ],
 targets: [
     .target(
@@ -110,13 +110,13 @@ let variable = CGPointVariableStrokeOffset.offsetContours(
 )
 ```
 
-Use `offsetHierarchy` when the caller also needs immediate nesting links. Pass
-multiple centerlines together when one stroked shape can sit inside another:
+Use `overlayHierarchy` when the caller also needs immediate nesting links from
+a floating-point Boolean operation:
 
 ```swift
-let hierarchy = CGPointVariableStrokeOffset.offsetHierarchy(
-    contours: [outerVertices, innerVertices],
-    isClosedPath: true
+let hierarchy = overlay.overlayHierarchy(
+    overlayRule: .union,
+    fillRule: .nonZero
 )
 
 let childIndices = Set(hierarchy?.links.map(\.childShapeIndex) ?? [])

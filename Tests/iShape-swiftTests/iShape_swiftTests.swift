@@ -162,6 +162,69 @@ import Testing
     assert(buffer.pointCount == 0)
 }
 
+@Test func testFloatOverlayHierarchyWithoutNestingHasNoLinks() {
+    let overlay = FloatOverlay()
+    overlay.addSubject([[[
+        CGPoint(x: 0, y: 0),
+        CGPoint(x: 0, y: 10),
+        CGPoint(x: 10, y: 10),
+        CGPoint(x: 10, y: 0),
+    ]]])
+
+    let hierarchy = overlay.overlayHierarchy(
+        overlayRule: .union,
+        fillRule: .nonZero
+    )
+
+    assert(hierarchy != nil)
+    assert(hierarchy!.shapes.count == 1)
+    assert(hierarchy!.links.isEmpty)
+}
+
+@Test func testFloatOverlayHierarchyLinksNestedShapes() {
+    let overlay = FloatOverlay()
+    overlay.addSubject([[
+        [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 100, y: 0),
+            CGPoint(x: 100, y: 100),
+            CGPoint(x: 0, y: 100),
+        ],
+        [
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 10, y: 90),
+            CGPoint(x: 90, y: 90),
+            CGPoint(x: 90, y: 10),
+        ],
+        [
+            CGPoint(x: 20, y: 20),
+            CGPoint(x: 80, y: 20),
+            CGPoint(x: 80, y: 80),
+            CGPoint(x: 20, y: 80),
+        ],
+    ]])
+
+    let hierarchy = overlay.overlayHierarchy(
+        overlayRule: .subject,
+        fillRule: .evenOdd
+    )
+
+    assert(hierarchy != nil)
+    assert(hierarchy!.shapes.count == 2)
+    assert(hierarchy!.links.count == 1)
+
+    let link = hierarchy!.links[0]
+    assert(link.parentShapeIndex >= 0 && link.parentShapeIndex < hierarchy!.shapes.count)
+    assert(link.childShapeIndex >= 0 && link.childShapeIndex < hierarchy!.shapes.count)
+    assert(link.parentShapeIndex != link.childShapeIndex)
+
+    let parentContourStart = hierarchy!.shapes[..<link.parentShapeIndex]
+        .reduce(0) { $0 + $1.count }
+    let parentContourEnd = parentContourStart + hierarchy!.shapes[link.parentShapeIndex].count
+    assert(link.parentContourIndex >= parentContourStart)
+    assert(link.parentContourIndex < parentContourEnd)
+}
+
 @Test func testCGPathBufferingExpandsRectangle() {
     let rect = CGRect(x: 0, y: 0, width: 10, height: 10)
     let source = CGPath(rect: rect, transform: nil)
@@ -341,64 +404,6 @@ import Testing
     assert(shapes == nil)
 }
 
-@Test func testCGPointVariableStrokeHierarchyWithoutNestingHasNoLinks() {
-    let vertices: [CGPointVariableStrokeVertex] = [
-        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
-        CGPointVariableStrokeVertex(x: 10, y: 0, width: 8),
-        CGPointVariableStrokeVertex(x: 20, y: 10, width: 4),
-    ]
-
-    let hierarchy = CGPointVariableStrokeOffset.offsetHierarchy(
-        vertices: vertices,
-        isClosedPath: false,
-        style: StrokeOffsetStyle(lineJoin: .round(0.2), lineCap: .round(0.2))
-    )
-
-    assert(hierarchy != nil)
-    assert(!hierarchy!.shapes.isEmpty)
-    assert(hierarchy!.links.isEmpty)
-}
-
-@Test func testCGPointVariableStrokeHierarchyLinksNestedShapes() {
-    let outer = variableStrokeSquare(min: 0, max: 100, width: 10)
-    let inner = variableStrokeSquare(min: 30, max: 70, width: 10)
-
-    let hierarchy = CGPointVariableStrokeOffset.offsetHierarchy(
-        contours: [outer, inner],
-        isClosedPath: true,
-        style: StrokeOffsetStyle(lineJoin: .round(0.1), lineCap: .round(0.1))
-    )
-
-    assert(hierarchy != nil)
-    assert(hierarchy!.shapes.count == 2)
-    assert(hierarchy!.links.count == 1)
-
-    let link = hierarchy!.links[0]
-    assert(link.parentShapeIndex >= 0 && link.parentShapeIndex < hierarchy!.shapes.count)
-    assert(link.childShapeIndex >= 0 && link.childShapeIndex < hierarchy!.shapes.count)
-    assert(link.parentShapeIndex != link.childShapeIndex)
-
-    let parentContourStart = hierarchy!.shapes[..<link.parentShapeIndex]
-        .reduce(0) { $0 + $1.count }
-    let parentContourEnd = parentContourStart + hierarchy!.shapes[link.parentShapeIndex].count
-    assert(link.parentContourIndex >= parentContourStart)
-    assert(link.parentContourIndex < parentContourEnd)
-}
-
-@Test func testCGPointVariableStrokeHierarchyRejectsInvalidWidth() {
-    let vertices: [CGPointVariableStrokeVertex] = [
-        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
-        CGPointVariableStrokeVertex(x: 10, y: 0, width: .nan),
-    ]
-
-    let hierarchy = CGPointVariableStrokeOffset.offsetHierarchy(
-        vertices: vertices,
-        isClosedPath: false
-    )
-
-    assert(hierarchy == nil)
-}
-
 @Test func testCGPointOutlineOffsetSquarePositiveDistance() {
     let square: [CGPoint] = [
         CGPoint(x: 0, y: 0),
@@ -566,19 +571,6 @@ private func bounds(of shapes: CGPointShapes) -> CGRect? {
     }
 
     return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-}
-
-private func variableStrokeSquare(
-    min: CGFloat,
-    max: CGFloat,
-    width: CGFloat
-) -> [CGPointVariableStrokeVertex] {
-    [
-        CGPointVariableStrokeVertex(x: min, y: min, width: width),
-        CGPointVariableStrokeVertex(x: max, y: min, width: width),
-        CGPointVariableStrokeVertex(x: max, y: max, width: width),
-        CGPointVariableStrokeVertex(x: min, y: max, width: width),
-    ]
 }
 
 private func approx(_ value: CGFloat, _ expected: CGFloat, eps: CGFloat = 1e-6) -> Bool {
