@@ -144,6 +144,24 @@ bool ishape_outline_f64_flat_contours_to_flat(
     double offset,
     FlatF64ShapesBufferOpaque* output
 );
+/* Join values and miter_min_turn are radians. Offset and style values must be
+ * finite. Input and output must be distinct buffers. */
+bool ishape_outline_f64_flat_shapes_to_flat_styled(
+    const FlatF64ShapesBufferOpaque* input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
+    FlatF64ShapesBufferOpaque* output
+);
+bool ishape_outline_f64_flat_contours_to_flat_styled(
+    const FlatF64ShapesBufferOpaque* input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
+    FlatF64ShapesBufferOpaque* output
+);
 bool ishape_stroke_f64_contour_to_flat_styled(
     const double* points,
     size_t count,
@@ -246,6 +264,22 @@ bool ishape_handle_outline_f64_flat_shapes_to_flat(
 bool ishape_handle_outline_f64_flat_contours_to_flat(
     FlatF64ShapesHandle input,
     double offset,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_outline_f64_flat_shapes_to_flat_styled(
+    FlatF64ShapesHandle input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
+    FlatF64ShapesHandle output
+);
+bool ishape_handle_outline_f64_flat_contours_to_flat_styled(
+    FlatF64ShapesHandle input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
     FlatF64ShapesHandle output
 );
 bool ishape_handle_stroke_f64_contour_to_flat_styled(

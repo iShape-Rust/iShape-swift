@@ -6,11 +6,16 @@ public enum FlatF64ShapeOffset {
     public static func offset(
         input: FlatF64ShapesBuffer,
         distance: CGFloat,
+        style: OutlineOffsetStyle = .default,
         output: FlatF64ShapesBuffer
     ) -> Bool {
-        ishape_handle_outline_f64_flat_shapes_to_flat(
+        let join = style.lineJoin.ffiValue
+        return ishape_handle_outline_f64_flat_shapes_to_flat_styled(
             input.rawPointer,
             Double(distance),
+            join.kind,
+            join.value,
+            Double(style.miterMinTurn),
             output.rawPointer
         )
     }
@@ -19,21 +24,27 @@ public enum FlatF64ShapeOffset {
     public static func offsetContours(
         input: FlatF64ShapesBuffer,
         distance: CGFloat,
+        style: OutlineOffsetStyle = .default,
         output: FlatF64ShapesBuffer
     ) -> Bool {
-        ishape_handle_outline_f64_flat_contours_to_flat(
+        let join = style.lineJoin.ffiValue
+        return ishape_handle_outline_f64_flat_contours_to_flat_styled(
             input.rawPointer,
             Double(distance),
+            join.kind,
+            join.value,
+            Double(style.miterMinTurn),
             output.rawPointer
         )
     }
 
     public static func offset(
         input: FlatF64ShapesBuffer,
-        distance: CGFloat
+        distance: CGFloat,
+        style: OutlineOffsetStyle = .default
     ) -> CGPointShapes? {
         let output = FlatF64ShapesBuffer()
-        guard offset(input: input, distance: distance, output: output) else {
+        guard offset(input: input, distance: distance, style: style, output: output) else {
             return nil
         }
 
@@ -43,10 +54,11 @@ public enum FlatF64ShapeOffset {
 
     public static func offsetContours(
         input: FlatF64ShapesBuffer,
-        distance: CGFloat
+        distance: CGFloat,
+        style: OutlineOffsetStyle = .default
     ) -> CGPointShapes? {
         let output = FlatF64ShapesBuffer()
-        guard offsetContours(input: input, distance: distance, output: output) else {
+        guard offsetContours(input: input, distance: distance, style: style, output: output) else {
             return nil
         }
 

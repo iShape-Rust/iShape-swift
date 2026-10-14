@@ -508,6 +508,109 @@ import Testing
     assert(approx(resultBounds!.maxY, 11))
 }
 
+@Test func testCGPointOutlineOffsetMiterVsBevel() throws {
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0), CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10), CGPoint(x: 0, y: 10),
+    ]]
+    let style = OutlineOffsetStyle(
+        lineJoin: .miter(2 * asin(1.0 / 4.0)),
+        miterMinTurn: 0.001
+    )
+    let bevel = try #require(CGPointOutlineOffset.offsetShape(shape: shape, distance: 1))
+    let miter = try #require(CGPointOutlineOffset.offsetShape(shape: shape, distance: 1, style: style))
+
+    #expect(bevel[0][0].count == 8)
+    #expect(miter[0][0].count == 4)
+    #expect(miter[0][0].allSatisfy {
+        (approx($0.x, -1) || approx($0.x, 11)) && (approx($0.y, -1) || approx($0.y, 11))
+    })
+
+    #expect(CGPointOutlineOffset.offsetContours(points: shape[0], distance: 1, style: style) == miter)
+    #expect(CGPointOutlineOffset.offsetContours(contours: shape, distance: 1, style: style) == miter)
+    #expect(CGPointOutlineOffset.offsetShape(contours: shape, distance: 1, style: style) == miter)
+    #expect(CGPointOutlineOffset.offsetShapes(shapes: [shape], distance: 1, style: style) == miter)
+}
+
+@Test func testCGPointOutlineOffsetMiterNegativeDistanceWithHole() throws {
+    let shape: CGPointShape = [
+        [CGPoint(x: 0, y: 0), CGPoint(x: 20, y: 0), CGPoint(x: 20, y: 20), CGPoint(x: 0, y: 20)],
+        [CGPoint(x: 5, y: 5), CGPoint(x: 5, y: 15), CGPoint(x: 15, y: 15), CGPoint(x: 15, y: 5)],
+    ]
+    let offset: CGFloat = 1
+    let style = OutlineOffsetStyle(lineJoin: .miter(2 * asin(1.0 / 4.0)), miterMinTurn: 0.001)
+    let shapes = try #require(CGPointOutlineOffset.offsetShape(shape: shape, distance: -offset, style: style))
+
+    #expect(shapes.count == 1)
+    #expect(shapes[0].count == 2)
+    #expect(shapes[0].allSatisfy { $0.count == 4 })
+    let outer = try #require(bounds(of: [[shapes[0][0]]]))
+    let hole = try #require(bounds(of: [[shapes[0][1]]]))
+    #expect(approx(outer.minX, 1) && approx(outer.minY, 1))
+    #expect(approx(outer.maxX, 19) && approx(outer.maxY, 19))
+    #expect(approx(hole.minX, 4) && approx(hole.minY, 4))
+    #expect(approx(hole.maxX, 16) && approx(hole.maxY, 16))
+}
+
+@Test func testCGPointOutlineOffsetMiterMinTurn() throws {
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0), CGPoint(x: 10, y: 0), CGPoint(x: 20, y: 0.2),
+        CGPoint(x: 20, y: 10), CGPoint(x: 0, y: 10),
+    ]]
+    let join = StrokeLineJoin.miter(2 * asin(1.0 / 4.0))
+    let defaultCutoff = try #require(CGPointOutlineOffset.offsetShape(
+        shape: shape, distance: 1, style: OutlineOffsetStyle(lineJoin: join)
+    ))
+    let smallCutoff = try #require(CGPointOutlineOffset.offsetShape(
+        shape: shape, distance: 1, style: OutlineOffsetStyle(lineJoin: join, miterMinTurn: 0.001)
+    ))
+    #expect(smallCutoff != defaultCutoff)
+}
+
+@Test func testFlatF64ShapeOffsetStyledBufferReuse() throws {
+    let input = FlatF64ShapesBuffer()
+    let output = FlatF64ShapesBuffer()
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0), CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10), CGPoint(x: 0, y: 10),
+    ]]
+    #expect(input.setShape(shape))
+    let style = OutlineOffsetStyle(lineJoin: .miter(2 * asin(1.0 / 4.0)), miterMinTurn: 0.001)
+    let expected = try #require(CGPointOutlineOffset.offsetShape(shape: shape, distance: 1, style: style))
+
+    #expect(FlatF64ShapeOffset.offset(input: input, distance: 1, style: style, output: output))
+    #expect(output.toCGPointShapes() == expected)
+    #expect(FlatF64ShapeOffset.offsetContours(input: input, distance: 1, style: style, output: output))
+    #expect(output.toCGPointShapes() == expected)
+    #expect(FlatF64ShapeOffset.offset(input: input, distance: 1, style: style) == expected)
+    #expect(FlatF64ShapeOffset.offsetContours(input: input, distance: 1, style: style) == expected)
+
+    #expect(!FlatF64ShapeOffset.offset(input: input, distance: 1, style: style, output: input))
+    input.clear()
+    #expect(FlatF64ShapeOffset.offset(input: input, distance: 1, style: style, output: output))
+    #expect(output.shapeCount == 0)
+    #expect(output.contourCount == 0)
+    #expect(output.pointCount == 0)
+}
+
+@Test func testCGPointOutlineOffsetRoundAndInvalidStyles() throws {
+    let shape: CGPointShape = [[
+        CGPoint(x: 0, y: 0), CGPoint(x: 10, y: 0),
+        CGPoint(x: 10, y: 10), CGPoint(x: 0, y: 10),
+    ]]
+    let round = try #require(CGPointOutlineOffset.offsetShape(
+        shape: shape, distance: 1, style: OutlineOffsetStyle(lineJoin: .round(0.2))
+    ))
+    #expect(round[0][0].count > 8)
+    #expect(CGPointOutlineOffset.offsetShape(
+        shape: shape, distance: 1, style: OutlineOffsetStyle(lineJoin: .miter(.nan))
+    ) == nil)
+    #expect(CGPointOutlineOffset.offsetShape(
+        shape: shape, distance: 1, style: OutlineOffsetStyle(lineJoin: .miter(0.5), miterMinTurn: .infinity)
+    ) == nil)
+    #expect(CGPointOutlineOffset.offsetShape(shape: shape, distance: .nan) == nil)
+}
+
 @Test func testFlatF64ShapeBooleanUnionFromBuffers() {
     let subject = FlatF64ShapesBuffer()
     let clip = FlatF64ShapesBuffer()

@@ -3,6 +3,7 @@ import iShapeFFI
 
 public enum StrokeLineJoin: Sendable {
     case bevel
+    /// Minimum interior angle in radians. A miter limit of L corresponds to 2 * asin(1 / L).
     case miter(CGFloat)
     case round(CGFloat)
 
@@ -11,8 +12,8 @@ public enum StrokeLineJoin: Sendable {
         switch self {
         case .bevel:
             return (kind: 0, value: 0)
-        case .miter(let ratio):
-            return (kind: 1, value: Double(ratio))
+        case .miter(let angle):
+            return (kind: 1, value: Double(angle))
         case .round(let ratio):
             return (kind: 2, value: Double(ratio))
         }

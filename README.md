@@ -2,13 +2,13 @@
 
 Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
 
-Current package version: `0.2.6`
+Current package version: `0.2.7`
 
 ### Installation
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.6")
+    .package(url: "https://github.com/iShape-Rust/iShape-swift.git", from: "0.2.7")
 ],
 targets: [
     .target(
@@ -79,6 +79,37 @@ overlay.addClip([[
 
 let result: CGPointShapes? = overlay.overlay(overlayRule: .union, fillRule: .evenOdd)
 ```
+
+### Outline Offsets
+
+Use `CGPointOutlineOffset` to expand or shrink closed shapes. Negative distances
+shrink outer contours and expand holes. The default join is bevel; pass an
+`OutlineOffsetStyle` for miter or round joins:
+
+```swift
+let style = OutlineOffsetStyle(
+    lineJoin: .miter(2 * asin(1.0 / 4.0)),
+    miterMinTurn: 0.001
+)
+
+let shapes = CGPointOutlineOffset.offsetShape(
+    shape: shape,
+    distance: -offset,
+    style: style
+)
+```
+
+The miter parameter is the minimum interior angle in radians; `2 * asin(1 / L)`
+corresponds to a miter limit of `L`. `miterMinTurn` independently controls the
+near-straight turn cutoff, in radians, below which a bevel join is used. It
+defaults to `.pi / 36` (5 degrees); zero disables the cutoff. Distances and
+style angles must be finite.
+
+The `style:` argument is also available on `offsetContours`, `offsetShapes`,
+and `FlatF64ShapeOffset` overloads. For reusable buffers, pass distinct input
+and output buffers.
+
+Bundled FFI libraries use `i_triangle 0.50.0` and `i_overlay 9.1.0`.
 
 ### Stroke Offsets
 

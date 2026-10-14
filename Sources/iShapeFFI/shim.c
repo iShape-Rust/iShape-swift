@@ -228,6 +228,42 @@ bool ishape_handle_outline_f64_flat_contours_to_flat(
     );
 }
 
+bool ishape_handle_outline_f64_flat_shapes_to_flat_styled(
+    FlatF64ShapesHandle input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
+    FlatF64ShapesHandle output
+) {
+    return ishape_outline_f64_flat_shapes_to_flat_styled(
+        (const FlatF64ShapesBufferOpaque*)input,
+        offset,
+        join_kind,
+        join_value,
+        miter_min_turn,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}
+
+bool ishape_handle_outline_f64_flat_contours_to_flat_styled(
+    FlatF64ShapesHandle input,
+    double offset,
+    uint32_t join_kind,
+    double join_value,
+    double miter_min_turn,
+    FlatF64ShapesHandle output
+) {
+    return ishape_outline_f64_flat_contours_to_flat_styled(
+        (const FlatF64ShapesBufferOpaque*)input,
+        offset,
+        join_kind,
+        join_value,
+        miter_min_turn,
+        (FlatF64ShapesBufferOpaque*)output
+    );
+}
+
 bool ishape_handle_stroke_f64_contour_to_flat_styled(
     const double* points,
     size_t count,
