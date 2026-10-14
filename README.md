@@ -1,10 +1,23 @@
 # iShapeKit
 
-Swift Package that bridges the [iShape Rust geometry toolkit](https://github.com/iShape-Rust/iShape) (via the bundled [`i_shape_ffi`](https://github.com/iShape-Rust/iShape/tree/main/iShape-ffi) crate) into native Swift APIs. It ships prebuilt static libraries plus thin Swift wrappers so you can run high-performance polygon Boolean operations on Apple platforms without touching Rust directly.
+2D polygon geometry for Swift, powered by the Rust iOverlay and iTriangle libraries through [iShape-ffi](https://github.com/iShape-Rust/iShape-ffi). Use it in drawing apps, vector editors, map tools, or games to combine shapes, build outlines, and prepare convex polygons for collision geometry.
 
-Current package version: `0.2.7`
+The package provides native `CGPoint` and integer APIs with a bundled XCFramework. Rust handles the geometry; Swift manages the library handles. You can use it without installing Rust, and reuse flat buffers to reduce allocations in repeated operations.
 
-### Installation
+## Features
+
+| Task | API |
+| --- | --- |
+| Union, intersection, difference, XOR; polygons with holes | `FloatOverlay`, `IntOverlay` |
+| Expand or shrink closed shapes | `CGPointOutlineOffset` |
+| Stroke paths with constant or per-vertex width | `CGPointStrokeOffset`, `CGPointVariableStrokeOffset` |
+| Stroke a `CGPath` made of line segments | `CGPathBuffering` |
+| Split shapes into non-overlapping convex polygons | `CGPointConvexDecomposition` |
+| Get nesting links between Boolean result shapes | `FloatOverlay.overlayHierarchy` |
+
+## Installation
+
+Requires Swift 6.2+, iOS 16+ or macOS 11+. Add version `0.2.7` through Swift Package Manager:
 
 ```swift
 dependencies: [
@@ -13,169 +26,55 @@ dependencies: [
 targets: [
     .target(
         name: "YourTarget",
-        dependencies: [
-            .product(name: "iShapeKit", package: "iShape-swift")
-        ]
+        dependencies: [.product(name: "iShapeKit", package: "iShape-swift")]
     )
 ]
 ```
 
-Rebuild the FFI artifacts whenever you change the Rust sources:
+## Quick start
 
-```bash
-cd iShape-swift
-./build_ffi.sh
-```
-
-Then build or test with SwiftPM (the script emits static libs for macOS, iOS device, and iOS simulator):
-
-```bash
-CLANG_MODULE_CACHE_PATH=$(pwd)/.cache/clang swift build --disable-sandbox
-CLANG_MODULE_CACHE_PATH=$(pwd)/.cache/clang swift test --disable-sandbox
-```
-
-### Quick Start
-
-```swift
-import iShapeKit
-
-let overlay = IntOverlay()
-
-// Add one subject shape (outer contour plus a hole).
-overlay.addSubject([[
-    [IntPoint(0, 0), IntPoint(0, 10), IntPoint(10, 10), IntPoint(10, 0)],
-    [IntPoint(4, 4), IntPoint(4, 6), IntPoint(6, 6), IntPoint(6, 4)],
-]])
-
-overlay.addClip([[
-    [IntPoint(5, 0), IntPoint(5, 10), IntPoint(12, 10), IntPoint(12, 0)],
-]])
-
-let buffer = FlatShapesBuffer()
-overlay.overlay(overlayRule: .union, fillRule: .evenOdd, output: buffer)
-
-let shapes: IntShapes = buffer.toIntShapes()
-print(shapes.count)      // -> 1
-print(shapes[0].count)   // -> outer contour + one hole
-```
-
-`FlatShapesBuffer` can be reused across calls and passed over the FFI boundary, while the high-level helpers return Swift-native `[[[IntPoint]]]` structures for convenience.
-
-### Float / CGPoint API
-
-`FloatOverlay` mirrors the integer API, but takes and returns `CGPoint`:
+Combine two rectangles:
 
 ```swift
 import CoreGraphics
 import iShapeKit
 
+let subject: CGPointShape = [[
+    CGPoint(x: 0, y: 0), CGPoint(x: 4, y: 0),
+    CGPoint(x: 4, y: 4), CGPoint(x: 0, y: 4)
+]]
+let clip: CGPointShape = [[
+    CGPoint(x: 2, y: 0), CGPoint(x: 6, y: 0),
+    CGPoint(x: 6, y: 4), CGPoint(x: 2, y: 4)
+]]
+
 let overlay = FloatOverlay()
-overlay.addSubject([[
-    [CGPoint(x: 0, y: 0), CGPoint(x: 0, y: 4), CGPoint(x: 4, y: 4), CGPoint(x: 4, y: 0)],
-]])
-overlay.addClip([[
-    [CGPoint(x: 2, y: 0), CGPoint(x: 2, y: 4), CGPoint(x: 6, y: 4), CGPoint(x: 6, y: 0)],
-]])
+overlay.addSubject([subject])
+overlay.addClip([clip])
 
-let result: CGPointShapes? = overlay.overlay(overlayRule: .union, fillRule: .evenOdd)
-```
-
-### Outline Offsets
-
-Use `CGPointOutlineOffset` to expand or shrink closed shapes. Negative distances
-shrink outer contours and expand holes. The default join is bevel; pass an
-`OutlineOffsetStyle` for miter or round joins:
-
-```swift
-let style = OutlineOffsetStyle(
-    lineJoin: .miter(2 * asin(1.0 / 4.0)),
-    miterMinTurn: 0.001
-)
-
-let shapes = CGPointOutlineOffset.offsetShape(
-    shape: shape,
-    distance: -offset,
-    style: style
-)
-```
-
-The miter parameter is the minimum interior angle in radians; `2 * asin(1 / L)`
-corresponds to a miter limit of `L`. `miterMinTurn` independently controls the
-near-straight turn cutoff, in radians, below which a bevel join is used. It
-defaults to `.pi / 36` (5 degrees); zero disables the cutoff. Distances and
-style angles must be finite.
-
-The `style:` argument is also available on `offsetContours`, `offsetShapes`,
-and `FlatF64ShapeOffset` overloads. For reusable buffers, pass distinct input
-and output buffers.
-
-Bundled FFI libraries use `i_triangle 0.50.0` and `i_overlay 9.1.0`.
-
-### Stroke Offsets
-
-Use `CGPointStrokeOffset` for a constant-width path stroke:
-
-```swift
-let stroked = CGPointStrokeOffset.offsetContours(
-    points: [
-        CGPoint(x: 0, y: 0),
-        CGPoint(x: 10, y: 0),
-        CGPoint(x: 10, y: 10),
-    ],
-    distance: 1,
-    isClosedPath: false,
-    style: StrokeOffsetStyle(lineJoin: .round(0.2), lineCap: .round(0.2))
-)
-```
-
-Use `CGPointVariableStrokeOffset` when every vertex has its own full stroke width:
-
-```swift
-let variable = CGPointVariableStrokeOffset.offsetContours(
-    vertices: [
-        CGPointVariableStrokeVertex(x: 0, y: 0, width: 2),
-        CGPointVariableStrokeVertex(x: 10, y: 0, width: 8),
-        CGPointVariableStrokeVertex(x: 20, y: 10, width: 4),
-    ],
-    isClosedPath: false
-)
-```
-
-Use `overlayHierarchy` when the caller also needs immediate nesting links from
-a floating-point Boolean operation:
-
-```swift
-let hierarchy = overlay.overlayHierarchy(
-    overlayRule: .union,
-    fillRule: .nonZero
-)
-
-let childIndices = Set(hierarchy?.links.map(\.childShapeIndex) ?? [])
-let rootShapes = hierarchy?.shapes.enumerated().compactMap { index, shape in
-    childIndices.contains(index) ? nil : shape
+if let shapes = overlay.overlay(overlayRule: .union, fillRule: .evenOdd) {
+    print(shapes.count) // 1 merged shape
 }
+
+// Expand a shape or split it into convex pieces.
+let expanded = CGPointOutlineOffset.offsetShape(shape: subject, distance: 1)
+let convex = CGPointConvexDecomposition.toConvexPolygons(shape: subject)
 ```
 
-`parentContourIndex` is a global index across the flattened contour order of
-`shapes`, while the parent and child shape indices address `shapes` directly.
+A contour is `[CGPoint]`; a shape is an array of contours (outer boundary followed by holes); a shapes collection is an array of shapes. Contours are implicitly closed. Use `.evenOdd` to interpret holes by nesting, or `.nonZero` with the appropriate contour winding.
 
-### Convex Decomposition
+For integer coordinates, use `IntOverlay` and `IntPoint`. For repeated calls, pass a reusable `FlatShapesBuffer` or `FlatF64ShapesBuffer` as the output. Buffer-based offsets and convex decomposition require distinct input and output buffers.
 
-`CGPointConvexDecomposition` triangulates shapes, applies Delaunay refinement,
-and groups the triangles into non-overlapping counter-clockwise convex polygons:
+Outline offsets use positive distances to expand outer contours and negative distances to shrink them. Stroke `distance` is half the full width; variable-stroke vertices specify the full width. Joins and caps are configurable through `OutlineOffsetStyle` and `StrokeOffsetStyle`; angle parameters are in radians. `CGPathBuffering` accepts line segments only; flatten curves before passing them in.
 
-```swift
-let polygons = CGPointConvexDecomposition.toConvexPolygons(
-    shape: [[
-        CGPoint(x: 0, y: 0),
-        CGPoint(x: 6, y: 0),
-        CGPoint(x: 6, y: 2),
-        CGPoint(x: 2, y: 2),
-        CGPoint(x: 2, y: 6),
-        CGPoint(x: 0, y: 6),
-    ]]
-)
+## Development
+
+To rebuild the bundled libraries, keep `iShape-ffi` and `iShape-swift` as sibling directories. On macOS with Xcode and Rust installed, run from this repository:
+
+```bash
+./build_ffi.sh
+swift build
+swift test
 ```
 
-Use the `input:output:` overload with `FlatF64ShapesBuffer` to reuse allocated
-FFI buffers across calls.
+The script builds macOS (arm64/x86_64), iOS devices (arm64), and iOS simulators (arm64/x86_64), then packages the static libraries into an XCFramework. Rebuild whenever the Rust implementation or C header changes.
